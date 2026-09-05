@@ -15,7 +15,8 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/login?message=Could not authenticate user')
+    console.error('Login error:', error)
+    redirect(`/login?message=${encodeURIComponent(error.message)}`)
   }
 
   revalidatePath('/', 'layout')
@@ -33,7 +34,8 @@ export async function signup(formData: FormData) {
   const { error } = await supabase.auth.signUp(data)
 
   if (error) {
-    redirect('/login?message=Could not authenticate user')
+    console.error('Signup error:', error)
+    redirect(`/login?message=${encodeURIComponent(error.message)}`)
   }
 
   // Optionally initialize merchant_policies here or let it be handled later.
