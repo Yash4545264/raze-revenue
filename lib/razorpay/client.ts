@@ -66,17 +66,26 @@ export const getRazorpayClient = async (merchantId: string) => {
       };
     }
   
-    return await razorpayInstance.paymentLink.create({
-      amount,
-      currency,
-      description,
-      customer,
-      notify: {
-        sms: true,
-        email: true
-      },
-      reminder_enable: true
-    });
+    try {
+      // Remove undefined properties to avoid Razorpay validation errors
+      const safeCustomer: any = { name: customer.name, email: customer.email };
+      if (customer.contact) safeCustomer.contact = customer.contact;
+
+      return await razorpayInstance.paymentLink.create({
+        amount,
+        currency,
+        description,
+        customer: safeCustomer,
+        notify: {
+          sms: !!customer.contact,
+          email: !!customer.email
+        },
+        reminder_enable: true
+      });
+    } catch (err) {
+      console.error('Razorpay createPaymentLink error:', err);
+      throw err;
+    }
   };
 
   return {
