@@ -48,10 +48,10 @@ export default async function LoginPage({
               </p>
             )}
             <div className="flex flex-col gap-2 pt-2">
-              <Button formAction={login} className="w-full bg-indigo-600 hover:bg-indigo-700">
+              <Button type="submit" formAction={login} className="w-full bg-indigo-600 hover:bg-indigo-700">
                 Sign In
               </Button>
-              <Button formAction={signup} variant="outline" className="w-full">
+              <Button type="submit" formAction={signup} variant="outline" className="w-full">
                 Create Account
               </Button>
             </div>
