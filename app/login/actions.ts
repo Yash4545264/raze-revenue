@@ -12,12 +12,14 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { data: authData, error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
     console.error('Login error:', error)
     redirect(`/login?message=${encodeURIComponent(error.message)}`)
   }
+
+  console.log('Login action success for user:', authData.user?.id);
 
   revalidatePath('/', 'layout')
   redirect('/dashboard')
@@ -31,14 +33,26 @@ export async function signup(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  const { data: authData, error } = await supabase.auth.signUp(data)
 
   if (error) {
     console.error('Signup error:', error)
     redirect(`/login?message=${encodeURIComponent(error.message)}`)
   }
 
-  // Optionally initialize merchant_policies here or let it be handled later.
+  // Initialize default merchant policies
+  if (authData.user) {
+    await supabase.from('merchant_policies').insert({
+      id: crypto.randomUUID(),
+      merchant_id: authData.user.id,
+      max_auto_recovery_amount: 50000,
+      max_discount_percentage: 10,
+      min_intervention_amount: 100,
+    });
+  }
+
+  console.log('Signup action success for user:', authData.user?.id);
+
   revalidatePath('/', 'layout')
   redirect('/dashboard')
 }
