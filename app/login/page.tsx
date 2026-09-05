@@ -4,11 +4,12 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { message: string }
+  searchParams: Promise<{ message: string }>
 }) {
+  const params = await searchParams;
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
@@ -41,9 +42,9 @@ export default function LoginPage({
                 required
               />
             </div>
-            {searchParams?.message && (
+            {params?.message && (
               <p className="text-sm text-red-500 text-center">
-                {searchParams.message}
+                {params.message}
               </p>
             )}
             <div className="flex flex-col gap-2 pt-2">
