@@ -180,8 +180,9 @@ export class SupabaseStore {
   }
 
   async updatePolicies(updates: Partial<MerchantPolicies>): Promise<void> {
-    // Assuming a single row exists, or we just update all rows if there's only one policy doc
-    const { error } = await this.supabase.from('merchant_policies').update(updates).neq('id', 'dummy'); 
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+    const { error } = await this.supabase.from('merchant_policies').update(updates).eq('merchant_id', user.id); 
     if (error) throw error;
   }
 
