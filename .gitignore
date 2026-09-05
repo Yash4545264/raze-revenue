@@ -60,3 +60,4 @@ test-policy.js
 test-sb.js
 test-sim.ts
 test-webhook.ts
+!.env.example
