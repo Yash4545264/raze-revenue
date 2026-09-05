@@ -27,6 +27,7 @@ export async function executeRecoveryAction(caseId: string, actionType: Recommen
 
     // Record Action
     await (await getDb()).createRecoveryAction({
+      merchant_id: recoveryCase.merchant_id,
       recovery_case_id: recoveryCase.id,
       action_type: 'payment_link',
       policy_result: 'approved',
@@ -40,6 +41,7 @@ export async function executeRecoveryAction(caseId: string, actionType: Recommen
 
     await (await getDb()).updateRecoveryCase(recoveryCase.id, { status: 'in_progress' });
     await (await getDb()).addAuditLog({
+      merchant_id: recoveryCase.merchant_id,
       entity_id: recoveryCase.id,
       event: 'PAYMENT_LINK_CREATED',
       actor: 'SYSTEM',
@@ -88,8 +90,9 @@ export async function executeRecoveryAction(caseId: string, actionType: Recommen
     );
 
     await (await getDb()).createRecoveryAction({
+      merchant_id: recoveryCase.merchant_id,
       recovery_case_id: recoveryCase.id,
-      action_type: actionType,
+      action_type: actionType as RecommendedActionType,
       policy_result: 'approved',
       status: 'executed',
       result: `Communication sent: ${commResult.messageId}`,
@@ -101,6 +104,7 @@ export async function executeRecoveryAction(caseId: string, actionType: Recommen
 
     await (await getDb()).updateRecoveryCase(recoveryCase.id, { status: 'in_progress' });
     await (await getDb()).addAuditLog({
+      merchant_id: recoveryCase.merchant_id,
       entity_id: recoveryCase.id,
       event: 'COMMUNICATION_SENT',
       actor: 'SYSTEM',
@@ -114,6 +118,7 @@ export async function executeRecoveryAction(caseId: string, actionType: Recommen
 
   // Simulate other actions (retry, human_escalation, etc.)
   await (await getDb()).createRecoveryAction({
+    merchant_id: recoveryCase.merchant_id,
     recovery_case_id: recoveryCase.id,
     action_type: actionType,
     policy_result: 'approved',
@@ -127,6 +132,7 @@ export async function executeRecoveryAction(caseId: string, actionType: Recommen
 
   await (await getDb()).updateRecoveryCase(recoveryCase.id, { status: 'in_progress' });
   await (await getDb()).addAuditLog({
+    merchant_id: recoveryCase.merchant_id,
     entity_id: recoveryCase.id,
     event: 'RECOVERY_ATTEMPTED',
     actor: 'SYSTEM',

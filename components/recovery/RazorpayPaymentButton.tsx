@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { db } from '@/lib/db/store';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ExternalLink, CheckCircle2, RotateCcw } from 'lucide-react';

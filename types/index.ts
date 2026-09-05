@@ -1,4 +1,5 @@
 export type Customer = {
+  merchant_id: string;
   id: string;
   name: string;
   email: string;
@@ -7,6 +8,7 @@ export type Customer = {
 };
 
 export type Order = {
+  merchant_id: string;
   id: string;
   razorpay_order_id: string;
   customer_id: string;
@@ -17,6 +19,7 @@ export type Order = {
 };
 
 export type Payment = {
+  merchant_id: string;
   id: string;
   razorpay_payment_id: string | null;
   razorpay_order_id: string;
@@ -36,6 +39,7 @@ export type RecoveryCaseStatus = 'pending' | 'policy_approved' | 'in_progress' |
 export type RecommendedActionType = 'payment_link' | 'retry' | 'customer_reminder' | 'switch_payment_method' | 'human_escalation' | 'do_nothing';
 
 export type RecoveryCase = {
+  merchant_id: string;
   id: string;
   payment_id: string | null;
   order_id: string;
@@ -54,6 +58,7 @@ export type RecoveryCase = {
 };
 
 export type RecoveryAction = {
+  merchant_id: string;
   id: string;
   recovery_case_id: string;
   action_type: RecommendedActionType;
@@ -68,6 +73,7 @@ export type RecoveryAction = {
 };
 
 export type CustomerBehaviour = {
+  merchant_id: string;
   id: string;
   customer_id: string;
   preferred_payment_method: string | null;
@@ -102,6 +108,7 @@ export type MerchantPolicies = {
 };
 
 export type AuditLog = {
+  merchant_id: string;
   id: string;
   entity_id: string;
   event: string;
@@ -113,6 +120,7 @@ export type AuditLog = {
 };
 
 export type WebhookEvent = {
+  merchant_id: string;
   id: string;
   event_id: string;
   event_type: string;

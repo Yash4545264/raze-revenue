@@ -69,7 +69,7 @@ export class SupabaseStore {
   }
 
   async getRecoveryActions(caseId?: string): Promise<RecoveryAction[]> {
-    let query = supabase.from('recovery_actions').select('*').order('executed_at', { ascending: false });
+    let query = this.supabase.from('recovery_actions').select('*').order('executed_at', { ascending: false });
     if (caseId) query = query.eq('recovery_case_id', caseId);
     const { data, error } = await query;
     if (error) console.error(error);
@@ -87,7 +87,7 @@ export class SupabaseStore {
   // For the MVP, we pull recent successes and filter in-memory.
   async findSimilarCases(failureReason: string, customerTier: string, limit = 5): Promise<RecoveryCase[]> {
     // We only care about cases that actually resulted in recovered revenue
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from('recovery_cases')
       .select('*')
       .eq('status', 'recovered')
@@ -99,7 +99,7 @@ export class SupabaseStore {
     
     // In-memory filter for similarity (simulating vector match)
     // We boost cases that match the failure reason or customer profile closely
-    const scored = successes.map(c => {
+    const scored = successes.map((c: any) => {
       let score = 0;
       if (c.diagnosis?.includes(failureReason)) score += 5;
       if (c.recovery_type === failureReason) score += 5;
@@ -109,9 +109,9 @@ export class SupabaseStore {
     });
 
     return scored
-      .sort((a, b) => b.score - a.score)
+      .sort((a: any, b: any) => b.score - a.score)
       .slice(0, limit)
-      .map(s => s.case);
+      .map((s: any) => s.case);
   }
 
   async createRecoveryAction(action: Partial<RecoveryAction>): Promise<RecoveryAction> {
@@ -135,7 +135,7 @@ export class SupabaseStore {
   }
 
   async getAuditLogs(entityId?: string): Promise<AuditLog[]> {
-    let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
+    let query = this.supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
     if (entityId) query = query.eq('entity_id', entityId);
     const { data, error } = await query;
     if (error) console.error(error);
@@ -241,7 +241,7 @@ export class SupabaseStore {
   }
 
   async getAllPayments(): Promise<any[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from('payments')
       .select(`
         *,
@@ -282,7 +282,7 @@ export class SupabaseStore {
   async getStats() {
     const { data: rawCases, error } = await this.supabase.from('recovery_cases').select('*');
     if (error) console.error(error);
-    const rc = (rawCases || []).map(c => {
+    const rc = (rawCases || []).map((c: any) => {
       if (c.diagnosis && c.diagnosis.includes('[Test Group:')) {
          const match = c.diagnosis.match(/\[Test Group: (.*?)\]/);
          if (match) {
@@ -293,11 +293,11 @@ export class SupabaseStore {
       return c;
     });
     
-    const totalRisk = rc.reduce((sum, c) => sum + Number(c.revenue_at_risk), 0);
-    const recoveredCases = rc.filter(c => c.status === 'recovered');
-    const totalRecovered = recoveredCases.reduce((sum, c) => sum + Number(c.revenue_at_risk), 0);
+    const totalRisk = rc.reduce((sum: number, c: any) => sum + Number(c.revenue_at_risk), 0);
+    const recoveredCases = rc.filter((c: any) => c.status === 'recovered');
+    const totalRecovered = recoveredCases.reduce((sum: number, c: any) => sum + Number(c.revenue_at_risk), 0);
     const recoveryRate = rc.length > 0 ? (recoveredCases.length / rc.length) * 100 : 0;
-    const activeCases = rc.filter(c => ['pending', 'policy_approved', 'in_progress', 'escalated'].includes(c.status)).length;
+    const activeCases = rc.filter((c: any) => ['pending', 'policy_approved', 'in_progress', 'escalated'].includes(c.status)).length;
     
     return {
       totalRisk,

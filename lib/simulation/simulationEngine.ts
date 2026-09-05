@@ -52,8 +52,8 @@ export const runSimulation = async (merchant_id: string, numCases: number = 100,
     const amount = Math.floor(Math.random() * 20000) + 500;
     results.revenueAtRisk += amount;
 
-    const mockCustomer: Customer = { id: `sim_cust_${timestamp}_${i}`, name: `Sim Cust ${i}`, email: `sim${i}@example.com`, phone: null, created_at: new Date().toISOString() };
-    const mockOrder: Order = { id: `sim_ord_${timestamp}_${i}`, razorpay_order_id: `rzp_ord_${i}`, customer_id: mockCustomer.id, amount, currency: 'INR', status: 'created', created_at: new Date().toISOString() };
+    const mockCustomer: Customer = { merchant_id, id: `sim_cust_${timestamp}_${i}`, name: `Sim Cust ${i}`, email: `sim${i}@example.com`, phone: null, created_at: new Date().toISOString() };
+    const mockOrder: Order = { merchant_id, id: `sim_ord_${timestamp}_${i}`, razorpay_order_id: `rzp_ord_${i}`, customer_id: mockCustomer.id, amount, currency: 'INR', status: 'created', created_at: new Date().toISOString() };
     
     const typeRand = Math.random();
     let failureReason = '';
@@ -77,13 +77,13 @@ export const runSimulation = async (merchant_id: string, numCases: number = 100,
     }
 
     const mockPayment: Payment | undefined = recoveryType === 'failed_payment' ? {
-      id: `sim_pay_${timestamp}_${i}`, razorpay_payment_id: null, razorpay_order_id: mockOrder.razorpay_order_id,
+      merchant_id, id: `sim_pay_${timestamp}_${i}`, razorpay_payment_id: null, razorpay_order_id: mockOrder.razorpay_order_id,
       customer_id: mockCustomer.id, amount, currency: 'INR', payment_method: 'upi', status: 'failed',
       failure_reason: failureReason, attempt_number: 1, created_at: new Date().toISOString()
     } : undefined;
 
     const mockBehaviour: CustomerBehaviour = {
-      id: `sim_cb_${timestamp}_${i}`, customer_id: mockCustomer.id, preferred_payment_method: 'upi', successful_payments: Math.floor(Math.random() * 5),
+      merchant_id, id: `sim_cb_${timestamp}_${i}`, customer_id: mockCustomer.id, preferred_payment_method: 'upi', successful_payments: Math.floor(Math.random() * 5),
       failed_payments: Math.floor(Math.random() * 2), average_payment_delay: 0, recovery_attempts: 0, successful_recoveries: 0, recovery_success_rate: 0, updated_at: new Date().toISOString()
     };
 
@@ -137,6 +137,7 @@ export const runSimulation = async (merchant_id: string, numCases: number = 100,
     // Log AI Decision
     if (shouldSaveToDb) {
       logs.push({
+        merchant_id,
         id: `log_ai_${timestamp}_${i}`,
         entity_id: `sim_case_${timestamp}_${i}`,
         event: 'AI_DIAGNOSIS',
@@ -149,6 +150,7 @@ export const runSimulation = async (merchant_id: string, numCases: number = 100,
 
       // Log Policy Result
       logs.push({
+        merchant_id,
         id: `log_policy_${timestamp}_${i}`,
         entity_id: `sim_case_${timestamp}_${i}`,
         event: 'POLICY_EVALUATION',
@@ -228,6 +230,7 @@ export const runSimulation = async (merchant_id: string, numCases: number = 100,
       
       if (policyResult.approved && bestStrategy.action !== 'do_nothing') {
         actions.push({
+          merchant_id,
           id: `sim_action_${timestamp}_${i}`,
           recovery_case_id: mockCase.id,
           action_type: bestStrategy.action,

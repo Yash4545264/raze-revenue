@@ -27,7 +27,8 @@ export async function POST(request: Request) {
     }
 
     await adminDb.addWebhookEvent({
-      event_id: event.id,
+      merchant_id: merchantId,
+      event_id: event.id || event.event_id,
       event_type: event.event,
       payload: event,
       processed: true
@@ -64,23 +65,25 @@ export async function POST(request: Request) {
       // 1. Record the failed payment
       const payment = await adminDb.createPayment({
         id: `pay_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        order_id: order.id,
+        merchant_id: merchantId,
+        razorpay_order_id: order.id,
         customer_id: customer.id,
         razorpay_payment_id: paymentEntity.id,
         amount: paymentEntity.amount / 100,
         currency: paymentEntity.currency,
         status: 'failed',
-        error_code: paymentEntity.error_code,
-        error_description: paymentEntity.error_description,
+        failure_reason: paymentEntity.error_description || paymentEntity.error_code,
+        attempt_number: 1,
         created_at: new Date().toISOString()
       });
 
       // 2. Create a Recovery Case
       const recoveryCase = await adminDb.createRecoveryCase({
+        merchant_id: merchantId,
         payment_id: payment.id,
         order_id: order.id,
         customer_id: customer.id,
-        recovery_type: 'payment_failure',
+        recovery_type: 'failed_payment',
         revenue_at_risk: payment.amount,
         diagnosis: null,
         recovery_probability: null,
@@ -90,25 +93,33 @@ export async function POST(request: Request) {
       });
 
       await adminDb.addAuditLog({
-        recovery_case_id: recoveryCase.id,
-        action: 'case_created',
+        merchant_id: merchantId,
+        entity_id: recoveryCase.id,
+        event: 'case_created',
+        actor: 'system',
+        decision: null,
         reason: 'Payment failed webhook received',
-        details: { error_code: paymentEntity.error_code }
+        metadata: { error_code: paymentEntity.error_code }
       });
 
       // 3. AI Diagnosis
-      const diagnosis = await analyzeRecoveryCase(payment, behaviour || undefined);
-      
-      // 4. Evaluate Strategies (pass dynamic policies)
-      const policies = await adminDb.getPolicies();
-      const strategyResults = await evaluateStrategies({
-        caseId: recoveryCase.id,
-        diagnosis,
-        revenueAtRisk: payment.amount,
-        policies
+      const diagnosis = await analyzeRecoveryCase({
+        customer,
+        payment,
+        order,
+        customerBehaviour: behaviour || undefined
       });
-
-      const bestStrategy = selectBestStrategy(strategyResults);
+      
+      // 4. Strategy Engine
+      const policies = await adminDb.getPolicies();
+      const strategyInput = {
+        revenueAtRisk: payment.amount,
+        policies,
+        alternativeActions: diagnosis.alternative_actions
+      };
+      
+      const strategies = await evaluateStrategies(strategyInput);
+      const bestStrategy = selectBestStrategy(strategies);
 
       // 5. Policy Engine Guardrails
       const policyResult = await runPolicyEngine({
@@ -162,19 +173,25 @@ export async function POST(request: Request) {
         });
 
         await adminDb.addAuditLog({
-          recovery_case_id: recoveryCase.id,
-          action: 'automated_action_executed',
+          merchant_id: merchantId,
+          entity_id: recoveryCase.id,
+          event: 'action_execution',
+          actor: 'system',
+          decision: null,
           reason: `Policy approved with score ${bestStrategy.expectedNetRecovery}`,
-          details: { action: bestStrategy.action, link: paymentLinkUrl }
+          metadata: { action: bestStrategy.action, link: paymentLinkUrl }
         });
       } else {
         // Escalate to human or stop
         await adminDb.updateRecoveryCase(recoveryCase.id, { status: policyResult.requiresHumanApproval ? 'escalated' : 'stopped' });
         await adminDb.addAuditLog({
-          recovery_case_id: recoveryCase.id,
-          action: policyResult.requiresHumanApproval ? 'escalated' : 'stopped',
+          merchant_id: merchantId,
+          entity_id: recoveryCase.id,
+          event: 'policy_evaluation',
+          actor: 'system',
+          decision: policyResult.approved ? 'APPROVED' : 'REJECTED',
           reason: policyResult.reason,
-          details: { original_action: bestStrategy.action }
+          metadata: { original_action: bestStrategy.action }
         });
       }
     } else if (event.event === 'payment.captured') {
@@ -203,10 +220,13 @@ export async function POST(request: Request) {
             }
             
             await adminDb.addAuditLog({
-              recovery_case_id: rc.id,
-              action: 'case_recovered',
+              merchant_id: merchantId,
+              entity_id: rc.id,
+              event: 'case_recovered',
+              actor: 'system',
+              decision: null,
               reason: 'Payment captured webhook received',
-              details: { amount: paymentEntity.amount / 100 }
+              metadata: { amount: paymentEntity.amount / 100 }
             });
           }
         }
