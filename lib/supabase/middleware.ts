@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/customers') ||
     request.nextUrl.pathname.startsWith('/recovery') ||
     request.nextUrl.pathname.startsWith('/payments') ||
+    request.nextUrl.pathname.startsWith('/simulation') ||
     request.nextUrl.pathname.startsWith('/audit');
     
   if (!user && isProtectedRoute) {
