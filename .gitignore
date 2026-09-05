@@ -39,3 +39,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+*.js
+
+# Test scripts
+alter-db.js
+check-actions-db.js
+check-db-policies.js
+check-db.ts
+check-policies.js
+check-schema.js
+check-simulation.js
+check.js
+fix-db-data.js
+run-sim.js
+test-engines.ts
+test-evaluate.js
+test-payments.js
+test-policy.js
+test-sb.js
+test-sim.ts
+test-webhook.ts
