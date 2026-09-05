@@ -2,18 +2,14 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { getAdminDb } from '../db/supabaseStore';
 
-// Only for fallback / mock purposes if we can't find keys
-const fallback_key_id = process.env.RAZORPAY_KEY_ID || 'mock_key_id';
-const fallback_key_secret = process.env.RAZORPAY_KEY_SECRET || 'mock_key_secret';
-const fallback_webhook_secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'mock_webhook_secret';
-
 /**
  * Returns a dynamically initialized Razorpay client using the merchant's keys from the database.
  */
 export const getRazorpayClient = async (merchantId: string) => {
   const policies = await getAdminDb().getPolicies();
-  // In a real multi-tenant setup, getAdminDb().getPolicies() would take the merchantId as an argument
-  // For MVP, we only have one merchant, so we just check if keys are configured in policies.
+  
+  const fallback_key_id = process.env.RAZORPAY_KEY_ID || 'mock_key_id';
+  const fallback_key_secret = process.env.RAZORPAY_KEY_SECRET || 'mock_key_secret';
   
   const key_id = policies?.razorpay_key_id || fallback_key_id;
   const key_secret = policies?.razorpay_key_secret || fallback_key_secret;
@@ -96,6 +92,7 @@ export const getRazorpayClient = async (merchantId: string) => {
 
 export const verifyWebhookSignature = async (merchantId: string, body: string, signature: string): Promise<boolean> => {
   const policies = await getAdminDb().getPolicies();
+  const fallback_webhook_secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'mock_webhook_secret';
   const secret = policies?.razorpay_webhook_secret || fallback_webhook_secret;
 
   if (secret === 'mock_webhook_secret') return true;
