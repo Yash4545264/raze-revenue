@@ -1,5 +1,5 @@
 import { Customer, Order, Payment, CustomerBehaviour, RecoveryCase, RecoveryAction, AuditLog } from '@/types';
-import { db } from '../db/supabaseStore';
+import { getAdminDb } from '../db/supabaseStore';
 import { analyzeRecoveryCase } from '../ai/recoveryBrain';
 import { evaluateStrategies, selectBestStrategy } from '../recovery/strategyEngine';
 import { runPolicyEngine } from '../policy/policyEngine';
@@ -18,7 +18,7 @@ export type SimulationResult = {
 };
 
 // Generate synthetic cases and run the autonomous recovery loop
-export const runSimulation = async (numCases: number = 100, forceType: 'failed_payment' | 'checkout_abandonment' | 'failed_subscription' | null = null): Promise<SimulationResult> => {
+export const runSimulation = async (merchant_id: string, numCases: number = 100, forceType: 'failed_payment' | 'checkout_abandonment' | 'failed_subscription' | null = null): Promise<SimulationResult> => {
   let results: SimulationResult = {
     totalCases: numCases,
     revenueAtRisk: 0,
@@ -32,7 +32,8 @@ export const runSimulation = async (numCases: number = 100, forceType: 'failed_p
     recoveryRate: 0,
   };
 
-  const policies = await db.getPolicies();
+  const adminDb = getAdminDb();
+  const policies = await adminDb.getPolicies();
 
   const customers: Customer[] = [];
   const orders: Order[] = [];
@@ -182,6 +183,7 @@ export const runSimulation = async (numCases: number = 100, forceType: 'failed_p
         
         if (shouldSaveToDb) {
           logs.push({
+            merchant_id,
             id: `log_exec_${timestamp}_${i}`,
             entity_id: `sim_case_${timestamp}_${i}`,
             event: 'ACTION_EXECUTION',
@@ -205,6 +207,7 @@ export const runSimulation = async (numCases: number = 100, forceType: 'failed_p
     
     if (shouldSaveToDb) {
       const mockCase: RecoveryCase = {
+        merchant_id,
         id: `sim_case_${timestamp}_${i}`,
         payment_id: mockPayment?.id || null,
         order_id: mockOrder.id,
@@ -243,7 +246,7 @@ export const runSimulation = async (numCases: number = 100, forceType: 'failed_p
 
   // Save the synthesized data in batch to Supabase to reflect in UI
   if (customers.length > 0) {
-    await db.seedData(customers, orders, payments, behaviours, cases, actions, logs);
+    await adminDb.seedData(customers, orders, payments, behaviours, cases, actions, logs);
   }
 
   results.recoveryRate = results.casesEvaluated > 0 ? (results.successfulRecoveries / results.casesEvaluated) * 100 : 0;

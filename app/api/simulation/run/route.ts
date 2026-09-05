@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import { runSimulation } from '@/lib/simulation/simulationEngine';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const merchant_id = user.id;
+
     const body = await request.json();
     const numCases = body.numCases || 100;
     const forceType = body.forceType || null;
@@ -13,7 +23,7 @@ export async function POST(request: Request) {
     delete process.env.GEMINI_API_KEY;
     delete process.env.AI_API_KEY;
 
-    const result = await runSimulation(numCases, forceType);
+    const result = await runSimulation(merchant_id, numCases, forceType);
 
     if (oldKey) process.env.GEMINI_API_KEY = oldKey;
     if (oldAiKey) process.env.AI_API_KEY = oldAiKey;
