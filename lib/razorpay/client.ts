@@ -6,7 +6,7 @@ import { getAdminDb } from '../db/supabaseStore';
  * Returns a dynamically initialized Razorpay client using the merchant's keys from the database.
  */
 export const getRazorpayClient = async (merchantId: string) => {
-  const policies = await getAdminDb().getPolicies();
+  const policies = await getAdminDb().getPolicies(merchantId);
   
   const fallback_key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_TY1mnuQwQlxHmA';
   const fallback_key_secret = process.env.RAZORPAY_KEY_SECRET || 'X23McDAngZpgcTYCZkamdwTL';
@@ -91,7 +91,7 @@ export const getRazorpayClient = async (merchantId: string) => {
 };
 
 export const verifyWebhookSignature = async (merchantId: string, body: string, signature: string): Promise<boolean> => {
-  const policies = await getAdminDb().getPolicies();
+  const policies = await getAdminDb().getPolicies(merchantId);
   const fallback_webhook_secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'mock_webhook_secret';
   const secret = policies?.razorpay_webhook_secret || fallback_webhook_secret;
 

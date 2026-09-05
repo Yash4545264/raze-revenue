@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       });
       
       // 4. Strategy Engine
-      const policies = await adminDb.getPolicies();
+      const policies = await adminDb.getPolicies(payment.merchant_id);
       const strategyInput = {
         revenueAtRisk: payment.amount,
         policies,

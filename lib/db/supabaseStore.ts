@@ -153,8 +153,12 @@ export class SupabaseStore {
     return data;
   }
 
-  async getPolicies(): Promise<MerchantPolicies> {
-    const { data, error } = await this.supabase.from('merchant_policies').select('*').single();
+  async getPolicies(merchantId?: string): Promise<MerchantPolicies> {
+    let query = this.supabase.from('merchant_policies').select('*');
+    if (merchantId) {
+      query = query.eq('merchant_id', merchantId);
+    }
+    const { data, error } = await query.single();
     if (error && error.code !== 'PGRST116') console.error('getPolicies error:', error); // Ignore no rows error
     
     // Fallback to default if not found

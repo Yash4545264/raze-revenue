@@ -33,7 +33,7 @@ export const runSimulation = async (merchant_id: string, numCases: number = 100,
   };
 
   const adminDb = getAdminDb();
-  const policies = await adminDb.getPolicies();
+  const policies = await adminDb.getPolicies(merchant_id);
 
   const customers: Customer[] = [];
   const orders: Order[] = [];

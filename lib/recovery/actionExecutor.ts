@@ -14,7 +14,7 @@ export async function executeRecoveryAction(caseId: string, actionType: Recommen
   const order = await (await getDb()).getOrder(recoveryCase.order_id);
   if (!order) throw new Error('Order not found');
 
-  const rzpClient = await getRazorpayClient('default_merchant');
+  const rzpClient = await getRazorpayClient(recoveryCase.merchant_id);
 
   if (actionType === 'payment_link') {
     // Create Razorpay payment link
