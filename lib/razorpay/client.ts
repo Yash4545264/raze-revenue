@@ -8,8 +8,8 @@ import { getAdminDb } from '../db/supabaseStore';
 export const getRazorpayClient = async (merchantId: string) => {
   const policies = await getAdminDb().getPolicies();
   
-  const fallback_key_id = process.env.RAZORPAY_KEY_ID || 'mock_key_id';
-  const fallback_key_secret = process.env.RAZORPAY_KEY_SECRET || 'mock_key_secret';
+  const fallback_key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_TY1mnuQwQlxHmA';
+  const fallback_key_secret = process.env.RAZORPAY_KEY_SECRET || 'X23McDAngZpgcTYCZkamdwTL';
   
   const key_id = policies?.razorpay_key_id || fallback_key_id;
   const key_secret = policies?.razorpay_key_secret || fallback_key_secret;
