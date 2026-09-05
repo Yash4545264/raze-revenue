@@ -9,10 +9,11 @@ import { Activity, ShieldCheck, CreditCard, ShoppingCart } from 'lucide-react';
 export const dynamic = 'force-dynamic';
 
 export default async function RecoveryPage() {
-  const cases = await (await getDb()).getRecoveryCases();
+  const db = await getDb();
+  const cases = await db.getRecoveryCases();
   
   // Fetch all customers associated with cases in parallel
-  const customerPromises = cases.map(c => (await getDb()).getCustomer(c.customer_id));
+  const customerPromises = cases.map(c => db.getCustomer(c.customer_id));
   const customers = await Promise.all(customerPromises);
   const customerMap = new Map(customers.filter(Boolean).map(c => [c!.id, c]));
 
