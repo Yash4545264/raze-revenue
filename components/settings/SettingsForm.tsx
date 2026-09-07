@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ShieldCheck, Save, Key } from 'lucide-react';
 import { MerchantPolicies } from '@/types';
 
-export function SettingsForm({ initialPolicies, onSave }: { initialPolicies: MerchantPolicies, onSave: (policies: MerchantPolicies) => Promise<void> }) {
+  export function SettingsForm({ initialPolicies, onSave }: { initialPolicies: MerchantPolicies, onSave: (policies: MerchantPolicies) => Promise<{ success: boolean; error?: string } | void> }) {
   const { toast } = useToast();
   const [policies, setPolicies] = useState(initialPolicies);
   const [saving, setSaving] = useState(false);
@@ -17,15 +17,18 @@ export function SettingsForm({ initialPolicies, onSave }: { initialPolicies: Mer
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(policies);
+      const res = await onSave(policies);
+      if (res && !res.success) {
+        throw new Error(res.error || 'Failed to update policies server-side.');
+      }
       toast({
         title: 'Policies Updated',
         description: 'Your recovery policies have been saved successfully.',
       });
-    } catch (err) {
+    } catch (err: any) {
       toast({
         title: 'Error',
-        description: 'Failed to update policies.',
+        description: `Failed to update policies. Details: ${err?.message || 'Unknown'}`,
         variant: 'destructive',
       });
     } finally {
@@ -94,6 +97,39 @@ export function SettingsForm({ initialPolicies, onSave }: { initialPolicies: Mer
                 onChange={(e) => setPolicies({ ...policies, low_confidence_threshold: parseFloat(e.target.value) })}
               />
               <p className="text-xs text-muted-foreground">Minimum confidence (0.0 - 1.0) required to auto-execute an action.</p>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-indigo-100">
+            <h3 className="text-sm font-medium mb-4">Allowed Interventions</h3>
+            <p className="text-xs text-muted-foreground mb-4">Select which recovery actions the AI is allowed to perform automatically.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { id: 'payment_link', label: 'Send Payment Links' },
+                { id: 'customer_reminder', label: 'Send Email/SMS Reminders' },
+                { id: 'retry', label: 'Auto-Retry Payments' },
+                { id: 'switch_payment_method', label: 'Offer Alternative Payment Methods' }
+              ].map((action) => (
+                <div key={action.id} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`action-${action.id}`}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    checked={(policies.allowed_actions || []).includes(action.id as any)}
+                    onChange={(e) => {
+                      const current = policies.allowed_actions || [];
+                      if (e.target.checked) {
+                        setPolicies({ ...policies, allowed_actions: [...current, action.id as any] });
+                      } else {
+                        setPolicies({ ...policies, allowed_actions: current.filter(a => a !== action.id) });
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`action-${action.id}`} className="text-sm font-medium cursor-pointer">
+                    {action.label}
+                  </Label>
+                </div>
+              ))}
             </div>
           </div>
 

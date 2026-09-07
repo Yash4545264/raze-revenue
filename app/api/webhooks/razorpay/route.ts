@@ -210,7 +210,7 @@ export async function POST(request: Request) {
             
             // Mark latest action as success
             const actions = await adminDb.getRecoveryActions(rc.id);
-            const pendingAction = actions.find(a => a.status === 'pending');
+            const pendingAction = actions.find(a => a.status === 'pending' || a.status === 'executed');
             if (pendingAction) {
               await adminDb.updateRecoveryAction(pendingAction.id, {
                 status: 'success',

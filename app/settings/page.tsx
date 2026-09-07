@@ -7,7 +7,13 @@ export default async function SettingsPage() {
 
   const handleSave = async (updatedPolicies: MerchantPolicies) => {
     'use server';
-    await (await getDb()).updatePolicies(updatedPolicies);
+    try {
+      await (await getDb()).updatePolicies(updatedPolicies);
+      return { success: true };
+    } catch (e: any) {
+      console.error("Save error:", e);
+      return { success: false, error: e.message || String(e) };
+    }
   };
 
   return (

@@ -31,6 +31,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  console.log('Middleware on', request.nextUrl.pathname, '| User:', user ? user.id : 'none');
+
   // Protect all routes except /login and /api and root /
   const isProtectedRoute = 
     request.nextUrl.pathname.startsWith('/dashboard') || 
@@ -42,6 +44,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/audit');
     
   if (!user && isProtectedRoute) {
+    console.log('Redirecting to /login because no user and protected route');
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);

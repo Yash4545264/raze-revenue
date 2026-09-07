@@ -12,7 +12,7 @@ export class SupabaseStore {
 
   async getRecoveryCases(): Promise<RecoveryCase[]> {
     const { data, error } = await this.supabase.from('recovery_cases').select('*').order('created_at', { ascending: false });
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     
     // Parse test_group out of diagnosis
     const parsed = (data || []).map((c: any) => {
@@ -30,7 +30,7 @@ export class SupabaseStore {
 
   async getRecoveryCase(id: string): Promise<RecoveryCase | undefined> {
     const { data, error } = await this.supabase.from('recovery_cases').select('*').eq('id', id).single();
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || undefined;
   }
 
@@ -72,13 +72,13 @@ export class SupabaseStore {
     let query = this.supabase.from('recovery_actions').select('*').order('executed_at', { ascending: false });
     if (caseId) query = query.eq('recovery_case_id', caseId);
     const { data, error } = await query;
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || [];
   }
 
   async getActions(): Promise<RecoveryAction[]> {
     const { data, error } = await this.supabase.from('recovery_actions').select('*');
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || [];
   }
 
@@ -94,7 +94,7 @@ export class SupabaseStore {
       .order('created_at', { ascending: false })
       .limit(50);
       
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     const successes = data || [];
     
     // In-memory filter for similarity (simulating vector match)
@@ -138,7 +138,7 @@ export class SupabaseStore {
     let query = this.supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
     if (entityId) query = query.eq('entity_id', entityId);
     const { data, error } = await query;
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || [];
   }
 
@@ -182,49 +182,53 @@ export class SupabaseStore {
   async updatePolicies(updates: Partial<MerchantPolicies>): Promise<void> {
     const { data: { user } } = await this.supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
-    const { error } = await this.supabase.from('merchant_policies').update(updates).eq('merchant_id', user.id); 
-    if (error) throw error;
+    const { id, merchant_id, ...safeUpdates } = updates as any;
+    const { error } = await this.supabase.from('merchant_policies').update(safeUpdates).eq('merchant_id', user.id); 
+    if (error) {
+      console.error("Supabase update error:", error);
+      throw error;
+    }
   }
 
   async getCustomer(id: string): Promise<Customer | undefined> {
     const { data, error } = await this.supabase.from('customers').select('*').eq('id', id).single();
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || undefined;
   }
   
   async getCustomers(): Promise<Customer[]> {
     const { data, error } = await this.supabase.from('customers').select('*');
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || [];
   }
 
   async getOrder(id: string): Promise<Order | undefined> {
     const { data, error } = await this.supabase.from('orders').select('*').eq('id', id).single();
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || undefined;
   }
 
   async getOrderByRazorpayId(rzpOrderId: string): Promise<Order | undefined> {
     const { data, error } = await this.supabase.from('orders').select('*').eq('razorpay_order_id', rzpOrderId).single();
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || undefined;
   }
 
   async getPayment(id: string): Promise<Payment | undefined> {
     const { data, error } = await this.supabase.from('payments').select('*').eq('id', id).single();
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || undefined;
   }
 
   async getCustomerBehaviour(customerId: string): Promise<CustomerBehaviour | undefined> {
     const { data, error } = await this.supabase.from('customer_behaviours').select('*').eq('customer_id', customerId).single();
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || undefined;
   }
 
   async getWebhookEvent(eventId: string): Promise<WebhookEvent | undefined> {
     const { data, error } = await this.supabase.from('webhook_events').select('*').eq('event_id', eventId).single();
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || undefined;
   }
 
@@ -241,7 +245,7 @@ export class SupabaseStore {
   
   async getPaymentsByCustomer(customerId: string): Promise<Payment[]> {
     const { data, error } = await this.supabase.from('payments').select('*').eq('customer_id', customerId);
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || [];
   }
 
@@ -263,7 +267,7 @@ export class SupabaseStore {
   
   async getOrdersByCustomer(customerId: string): Promise<Order[]> {
     const { data, error } = await this.supabase.from('orders').select('*').eq('customer_id', customerId);
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     return data || [];
   }
   
@@ -286,7 +290,7 @@ export class SupabaseStore {
   
   async getStats() {
     const { data: rawCases, error } = await this.supabase.from('recovery_cases').select('*');
-    if (error) console.error(error);
+    if (error && error.code !== 'PGRST116') console.error(error);
     const rc = (rawCases || []).map((c: any) => {
       if (c.diagnosis && c.diagnosis.includes('[Test Group:')) {
          const match = c.diagnosis.match(/\[Test Group: (.*?)\]/);
@@ -341,13 +345,22 @@ export class SupabaseStore {
     actions: RecoveryAction[],
     logs: AuditLog[]
   ) {
-    if (customers.length > 0) await this.supabase.from('customers').insert(customers);
-    if (orders.length > 0) await this.supabase.from('orders').insert(orders);
-    if (payments.length > 0) await this.supabase.from('payments').insert(payments);
-    if (behaviours.length > 0) await this.supabase.from('customer_behaviours').insert(behaviours);
+    const errors: any[] = [];
+    const handleErr = (err: any, table: string) => { if (err) errors.push({ table, err }); };
+    
+    const stripParams = (arr: any[]) => arr.map(item => {
+      const copy = { ...item };
+      delete copy.merchant_id;
+      return copy;
+    });
+
+    if (customers.length > 0) { const { error } = await this.supabase.from('customers').insert(stripParams(customers)); handleErr(error, 'customers'); }
+    if (orders.length > 0) { const { error } = await this.supabase.from('orders').insert(stripParams(orders)); handleErr(error, 'orders'); }
+    if (payments.length > 0) { const { error } = await this.supabase.from('payments').insert(stripParams(payments)); handleErr(error, 'payments'); }
+    if (behaviours.length > 0) { const { error } = await this.supabase.from('customer_behaviours').insert(stripParams(behaviours)); handleErr(error, 'behaviours'); }
+    
     if (cases.length > 0) {
-      const sanitizedCases = cases.map(c => {
-         const sc = { ...c } as any;
+      const sanitizedCases = stripParams(cases).map(sc => {
          if (sc.test_group) {
             sc.diagnosis = (sc.diagnosis || '') + ` [Test Group: ${sc.test_group}]`;
          }
@@ -355,18 +368,26 @@ export class SupabaseStore {
          delete sc.optimal_timing;
          return sc;
       });
-      await this.supabase.from('recovery_cases').insert(sanitizedCases);
+      const { error } = await this.supabase.from('recovery_cases').insert(sanitizedCases);
+      handleErr(error, 'cases');
     }
+    
     if (actions.length > 0) {
-      const sanitizedActions = actions.map(a => {
-        const sa = { ...a } as any;
+      const sanitizedActions = stripParams(actions).map(sa => {
         delete sa.razorpay_payment_link_id;
         delete sa.razorpay_payment_link_url;
+        delete sa.created_at; // missing in db schema
         return sa;
       });
-      await this.supabase.from('recovery_actions').insert(sanitizedActions);
+      const { error } = await this.supabase.from('recovery_actions').insert(sanitizedActions);
+      handleErr(error, 'actions');
     }
-    if (logs.length > 0) await this.supabase.from('audit_logs').insert(logs);
+    
+    if (logs.length > 0) { const { error } = await this.supabase.from('audit_logs').insert(stripParams(logs)); handleErr(error, 'logs'); }
+
+    if (errors.length > 0) {
+      throw new Error(`Seed failed: ${JSON.stringify(errors)}`);
+    }
   }
 }
 export const getDb = async () => {

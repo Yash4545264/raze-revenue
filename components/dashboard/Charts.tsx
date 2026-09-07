@@ -55,7 +55,7 @@ export function StrategyPerformanceChart({ data }: { data: any[] }) {
             <YAxis axisLine={false} tickLine={false} tickFormatter={(value: any) => `${value}%`} />
             <Tooltip 
               formatter={(value: any) => [`${value}%`, 'Success Rate']} cursor={{ fill: '#f9fafb' }} />
-            <Bar dataKey="success" fill="#4f46e5" radius={[4, 4, 0, 0]} maxBarSize={50} />
+            <Bar dataKey="success" fill="#4f46e5" radius={[4, 4, 0, 0]} maxBarSize={50} minPointSize={2} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

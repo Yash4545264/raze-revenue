@@ -54,5 +54,11 @@ export async function signup(formData: FormData) {
   console.log('Signup action success for user:', authData.user?.id);
 
   revalidatePath('/', 'layout')
+  
+  // If email confirmation is required, session will be null
+  if (!authData.session) {
+    redirect('/login?message=Account created! Please check your email to verify your account.')
+  }
+
   redirect('/dashboard')
 }
