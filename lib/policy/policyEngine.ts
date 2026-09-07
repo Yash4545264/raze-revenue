@@ -93,6 +93,8 @@ export const runPolicyEngine = (input: PolicyEngineInput): PolicyCheckResult => 
     });
     const istHour = parseInt(formatter.format(now), 10);
     
+    // Escalation Rule A: RBI Fair Practices Code (Time of Day Compliance)
+    // Communications must only happen between 08:00 and 19:00 IST
     if (istHour < 8 || istHour >= 19) {
       return {
         approved: false,
